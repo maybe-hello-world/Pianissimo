@@ -1,26 +1,42 @@
-import tensorflow as tf
+# !/usr/bin/python3
 
-from keras.models import *
-from keras.layers import *
-from keras.utils import np_utils
-import keras
-import keras.backend as K
+import sys
+import getopt
+import os
 
-import generator as gn
+import trainer
+import tester
 
-import math
-import random
+## Some constants
+g_weights_name = 'g_weights'
+d_weights_name = 'd_weights'
 
-import numpy as np
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "ho:i:")
+except getopt.GetoptError:
+    print('main.py -o <train|test> -i <inputfolder>')
+    sys.exit(2)
 
-#some data preparation here
+inputfolder = ""
+train = True
+for opt, arg in opts:
+    if opt == '-h':
+        print('main.py -i <inputfolder>')
+        sys.exit(0)
+    elif opt == '-o':
+        if arg in ('test', 'train'):
+            train = arg == 'train'
+        else:
+            print("Unknown operation")
+            sys.exit(1)
+    elif opt in ("-i", "--ifolder"):
+        inputfolder = arg
 
+if len(inputfolder) == 0 or not os.path.isdir(inputfolder):
+    print("Folder is missing")
+    sys.exit(1)
 
-#fake data and real data def
-fake = []
-real = []
-
-gen = gn.create_generator(12)
-
-#
-# disc = ds.create_generator(12)
+if train:
+    trainer.train(inputfolder, 100)
+else:
+    tester.test()

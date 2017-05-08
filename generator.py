@@ -1,3 +1,5 @@
+# !/usr/bin/python3
+
 # В данном файле описывается генератор
 # На вход подается 12-битный вектор нот,
 # каждый бит означает какую-то
@@ -13,12 +15,18 @@
 # Input - 12-bit vector
 # Output - 12-bit vector
 
-from keras.models import Sequential
-from keras.layers import Dense, Activation, Dropout, LSTM, GRU
+from keras.models import *
+from keras.layers import Dense, Activation, Dropout, LSTM, GRU, Input
 from keras.constraints import maxnorm
 
 
-def create_generator(input_dim):
-    model = Sequential()
-    model.add(LSTM(144, init='uniform', input_dim=(input_dim,), activation='tanh', W_constraint=maxnorm(4)))
-    return model
+# expected input data shape: (<batch_size>, <timesteps (how far to look back)>, <data_dim>)
+# (1, 1, 12)?
+def create_generator(inp_tensor):
+    prev_l = Input(tensor=inp_tensor)
+    prev_l = LSTM(144, return_sequences=True, stateful=True, kernel_initializer='uniform')(prev_l)
+    prev_l = LSTM(72, return_sequences=True, stateful=True, kernel_initializer='uniform')(prev_l)
+    prev_l = LSTM(36, stateful=True, kernel_initializer='uniform')(prev_l)
+    prev_l = Dense(12, kernel_constraint=maxnorm(4), kernel_initializer='uniform')(prev_l)
+    prev_l = Activation('tanh')(prev_l)
+    return Model(inputs=inp_tensor, outputs=prev_l)
