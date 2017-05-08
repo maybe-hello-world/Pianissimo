@@ -10,7 +10,7 @@
 # Output - 1 bit answer (fake or real data)
 
 from keras.models import *
-from keras.layers import Dense, Activation, Dropout, LSTM, GRU
+from keras.layers import Dense, Activation, LSTM
 from keras.constraints import maxnorm
 
 # expected input data shape: (<bacth_size>, <timesteps (how far to look back)>, <data_dim>)

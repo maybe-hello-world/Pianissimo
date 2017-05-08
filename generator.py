@@ -16,7 +16,7 @@
 # Output - 12-bit vector
 
 from keras.models import *
-from keras.layers import Dense, Activation, Dropout, LSTM, GRU, Input
+from keras.layers import Dense, Activation, LSTM, Input
 from keras.constraints import maxnorm
 
 

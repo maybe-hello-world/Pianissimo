@@ -22,7 +22,8 @@ from os.path import isfile, join
 
 def train(inputfolder, epochs):
 
-    ## Load all files from directory
+    ## -----------------------------------------------------------
+    ## Dataset preparation
     #
 
     files = [join(inputfolder, f) for f in listdir(inputfolder) if isfile(join(inputfolder, f))]
@@ -34,49 +35,28 @@ def train(inputfolder, epochs):
         f.close()
 
     dataset = np.array(dataset)
-    GAN()
-    # for x in dataset:
-    #     x = np.expand_dims(np.expand_dims(x, 1), 1)
-    #     print(x.shape)
-    #     print(x[20])
-    ##
+    #
+    ## -----------------------------------------------------------
 
-    ## Define tensorflow graph
-    #
-    # sess = tf.Session()
-    #
-    # gen = gn.create_generator()
-    # gen.summary()
-    # a = Input(shape=[12,32])
-    # gen = gen(a)
-    # gen.summary()
-    #
-    #
-
-    # g_opt = tf.train.GradientDescentOptimizer(learning_rate=0.1)
-    # g_loss =
-    #
-    # disc = ds.create_discriminator()
-    # disc.summary()
-
-    # for i in range(epochs):
-    #     np.random.shuffle(dataset)
-    #     for song in dataset:
-
-def GAN():
-    # Start stacking GAN
     sess = tf.Session()
+
+    # Define session for Keras and set learning flag to true (batch normalization etc)
     K.set_session(sess)
+    K.set_learning_phase(True)
+
+    ## -----------------------------------------------------------
+    ## Start stacking GAN
+    # Here because we need to call reset_states() from discriminator and generator models
+    #
 
     # input for choosing real/fake data
-    if_real = tf.placeholder(tf.bool, name="IF_REAL")
+    if_real = tf.placeholder(tf.bool)
 
     # input for GAN
-    inp = tf.placeholder(tf.float32, shape=(1,1,12), name="INPUT")
+    inp = tf.placeholder(tf.float32, shape=(1, 1, 12))
 
     # Create generator model
     gen = gn.create_generator(inp)
-    # gen.summary()
 
     # Get output tensor and do some reshaping
     g_out = tf.expand_dims(gen.output, axis=1)
@@ -87,19 +67,17 @@ def GAN():
 
     # Create discriminator model
     dis = ds.create_discriminator(x)
-    #dis.summary()
 
     # Again get output tensor
     d_out = dis.output
 
-    # Calculate discriminator loss
-    dloss = - tf.reduce_mean(tf.to_float(if_real) * tf.log(d_out) - (1 - tf.to_float(if_real)) * tf.log(1 - d_out))
+    # Finish stacking GAN: add loss functions and different updates
+    # So my_gan is a function with such signature:
+    # my_gan(sess=<session var>, if_real_input=<if_real value>, vector_input=<12-bit vector value>)
+    my_gan = GAN(if_real=if_real, inp=inp, d_out=d_out, dis=dis, gen=gen)
 
-    # Calculate generator's loss
-    gloss = - tf.reduce_mean(tf.log(1 - d_out))
-
-    # Define optimizer (for learning rate and beta1 see advices in Deep Convolutional GAN pre-print on arXive)
-    opt = tf.train.AdamOptimizer(learning_rate=0.0002, beta1=0.5)
+    #
+    ## -----------------------------------------------------------
 
     # Create writer for tensorboard
     summary_writer = tf.summary.FileWriter('/home/kell/tensorflow_logs', graph=sess.graph)
@@ -108,59 +86,81 @@ def GAN():
     init = tf.global_variables_initializer()
     sess.run(init)
 
-    # run simple test
-    res = sess.run(dloss, feed_dict={if_real: True, inp: np.expand_dims(np.expand_dims(np.array([1,2,3,4,5,6,7,8,9,0,1,2]), axis=0), axis=0)})
-    print(res)
+    # Just test vars
+    test = np.expand_dims(np.expand_dims(np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2]), axis=0), axis=0)
+
+    a = my_gan(sess=sess, if_real_input=False, vector_input=test)
+    print(a[1])
 
     # Close session
     summary_writer.close()
     sess.close()
 
+    # for x in dataset:
+    #     x = np.expand_dims(np.expand_dims(x, 1), 1)
+    #     print(x.shape)
+    #     print(x[20])
+    ##
 
+    # for i in range(epochs):
+    #     np.random.shuffle(dataset)
+    #     for song in dataset:
 
-# x = tf.placeholder(tf.float32)
-# y = tf.placeholder(tf.float32)
-# z = tf.placeholder(tf.float32)
-#
-# def fn1(a, b):
-#   return tf.mul(a, b)
-#
-# def fn2(a, b):
-#   return tf.add(a, b)
-#
-# pred = tf.placeholder(tf.bool)
-# result = tf.cond(pred, lambda: fn1(x, y), lambda: fn2(y, z))
-#
-# Then you can call it as bellowing:
-#
-# with tf.Session() as sess:
-#   print sess.run(result, feed_dict={x: 1, y: 2, z: 3, pred: True})
-#   # The result is 2.0
+def GAN(if_real, inp, d_out, dis, gen):
+    # Calculate discriminator loss
+    dloss = - tf.reduce_mean(tf.to_float(if_real) * tf.log(d_out) - (1 - tf.to_float(if_real)) * tf.log(1 - d_out))
 
+    # Calculate generator's loss
+    gloss = - tf.reduce_mean(tf.log(1 - d_out))
 
+    # Define optimizer (for learning rate and beta1 see advices in Deep Convolutional GAN pre-print on arXiv)
+    opt = tf.train.AdamOptimizer(learning_rate=0.0002, beta1=0.5)
 
+    # Compute and apply gradients for discriminator
+    grad_loss_dis = opt.compute_gradients(dloss, dis.trainable_weights)
+    update_dis = opt.apply_gradients(grad_loss_dis)
 
+    # Compute gradients for generator
+    # It will be applied only if gen took part in the party
+    # (only if we used it's output so if_real == False)
+    grad_loss_gen = opt.compute_gradients(gloss, gen.trainable_weights)
 
-# # fake data and real data def
-# fake = []
-# real = []
-#
-# dloss = 0  #some loss function for discriminator
-# gloss = 0  #some loss function for generator
-#
-# gen = gn.create_generator(12)
-# disc = ds.create_discriminator(12)
-#
-# # Create session for computing
-# sess = tf.Session()
-#
-#
-# doptimizer = tf.train.GradientDescentOptimizer(learning_rate=0.1).minimize(dloss)
-# goptimizer = tf.train.GradientDescentOptimizer(learning_rate=0.1).minimize(gloss)
-#
-#
-# # optimizer could be split like that:
-# # optimizer = tf.train.AdamOptimizer()
-# # grads_and_vars = optimizer.compute_gradients(loss)
-# ## Change grads_and_vars as you wish
-# # opt_operation = optimizer.apply_gradients(grads_and_vars)
+    # list: [(gradient, variable),(gradient, variable)...]
+    new_grad_loss_gen = [(tf.cond(if_real, lambda: tf.multiply(grad, 0), lambda: grad), var) for grad, var in grad_loss_gen]
+
+    update_gen = opt.apply_gradients(new_grad_loss_gen)
+
+    # We have to update all other tensors like batch_normalization etc
+    def other_updates(model):
+        input_tensors = []
+
+        # Get other nodes
+        nodes = model.inbound_nodes
+
+        # Get all tensors in single list and get updates for all of them
+        for i in nodes:
+            input_tensors.append(i.input_tensors)
+        ans = [model.get_updates_for(i) for i in input_tensors]
+
+        return ans
+
+    update_other = [other_updates(x) for x in [dis, gen]]
+
+    # Collect all updates in one list...
+    # generator should be updated in outer space so I include grads instead of update result
+    train_step = [update_gen, update_dis, update_other]
+    # ...and losses to other
+    losses = [gloss, dloss]
+
+    # Create func pointer to feeding step
+    def gan_feed(sess, if_real_input, vector_input):
+        nonlocal train_step, losses, if_real, inp, opt
+
+        res = sess.run([train_step, losses], feed_dict={
+            if_real: if_real_input,
+            inp: vector_input,
+        })
+
+        return res
+
+    return gan_feed
