@@ -37,6 +37,6 @@ if len(inputfolder) == 0 or not os.path.isdir(inputfolder):
     sys.exit(1)
 
 if train:
-    trainer.train(inputfolder, 100)
+    trainer.train(inputfolder, 3)
 else:
     tester.test()

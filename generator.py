@@ -16,17 +16,20 @@
 # Output - 12-bit vector
 
 from keras.models import *
-from keras.layers import Dense, Activation, LSTM, Input
+from keras.layers import Dense, Activation, LSTM
+from keras.layers.advanced_activations import LeakyReLU
 from keras.constraints import maxnorm
+import tensorflow as tf
 
 
 # expected input data shape: (<batch_size>, <timesteps (how far to look back)>, <data_dim>)
 # (1, 1, 12)?
 def create_generator(inp_tensor):
-    prev_l = Input(tensor=inp_tensor)
-    prev_l = LSTM(144, return_sequences=True, stateful=True, kernel_initializer='uniform')(prev_l)
-    prev_l = LSTM(72, return_sequences=True, stateful=True, kernel_initializer='uniform')(prev_l)
-    prev_l = LSTM(36, stateful=True, kernel_initializer='uniform')(prev_l)
-    prev_l = Dense(12, kernel_constraint=maxnorm(4), kernel_initializer='uniform')(prev_l)
-    prev_l = Activation('tanh')(prev_l)
-    return Model(inputs=inp_tensor, outputs=prev_l)
+    with tf.name_scope('gen'):
+        prev_l = Input(tensor=inp_tensor)
+        prev_l = LSTM(144, return_sequences=True, stateful=True, kernel_initializer='uniform')(prev_l)
+        prev_l = LSTM(72, return_sequences=True, stateful=True, kernel_initializer='uniform')(prev_l)
+        prev_l = LSTM(36, stateful=True, kernel_initializer='uniform')(prev_l)
+        prev_l = Dense(12, kernel_constraint=maxnorm(4), kernel_initializer='uniform')(prev_l)
+        prev_l = Activation('tanh')(prev_l)
+        return Model(inputs=inp_tensor, outputs=prev_l)

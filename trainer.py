@@ -2,21 +2,14 @@
 
 import tensorflow as tf
 
-from keras.models import *
-from keras.layers import *
-from keras.utils import np_utils
-import keras
 import keras.backend as K
 
 import generator as gn
 import discriminator as ds
 
-import math
 import random
 
 import numpy as np
-import getopt
-import sys
 from os import listdir
 from os.path import isfile, join
 
@@ -28,13 +21,28 @@ def train(inputfolder, epochs):
 
     files = [join(inputfolder, f) for f in listdir(inputfolder) if isfile(join(inputfolder, f))]
 
+    # Func for turning strings like '0, 3, 11' into [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+    def to_slice(string):
+        ans = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        for j in [int(s) for s in string.split(',')]:
+            ans[j] = 1
+        return np.array(ans)
+
     dataset = []
+    # Read strings, turn them into np.arrays and add dims (output - (1, 1, 12))
     for file in files:
         f = open(file, 'r')
-        dataset.append(np.array([st.rstrip() for st in f.readlines()]))
+        dataset.append(np.array(
+            [
+                np.expand_dims(np.expand_dims(to_slice(st.rstrip()), axis=0), axis=0)
+                for st in f.readlines()
+            ]
+        ))
         f.close()
 
     dataset = np.array(dataset)
+    np.random.shuffle(dataset)
+
     #
     ## -----------------------------------------------------------
 
@@ -59,7 +67,16 @@ def train(inputfolder, epochs):
     gen = gn.create_generator(inp)
 
     # Get output tensor and do some reshaping
-    g_out = tf.expand_dims(gen.output, axis=1)
+    g_out = gen.output
+
+    # from tanh (-1, 1) to {0, 1}
+    g_out = tf.sign(g_out)
+    g_out = tf.add(g_out, tf.constant(1.0))
+    g_out = tf.div(g_out, tf.constant(2.0))
+    #g_out = tf.round(g_out)
+
+    # Get output tensor and do some reshaping
+    g_out = tf.expand_dims(g_out, axis=1)
 
     # If on current step we want to feed discriminator with real data than create
     # tensor from inp. else from result of generator
@@ -73,9 +90,9 @@ def train(inputfolder, epochs):
 
     # Finish stacking GAN: add loss functions and different updates
     # So my_gan is a function with such signature:
-    # my_gan(sess=<session var>, if_real_input=<if_real value>, vector_input=<12-bit vector value>)
+    # my_gan(if_real=<if_real value>, inp=<12-bit vector value>,
+    # d_out=<output of discriminator>, dis=<discriminator model>, gen=<generator model>)
     my_gan = GAN(if_real=if_real, inp=inp, d_out=d_out, dis=dis, gen=gen)
-
     #
     ## -----------------------------------------------------------
 
@@ -86,32 +103,40 @@ def train(inputfolder, epochs):
     init = tf.global_variables_initializer()
     sess.run(init)
 
-    # Just test vars
-    test = np.expand_dims(np.expand_dims(np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2]), axis=0), axis=0)
+    # Main cycle
+    for i in range(epochs):
+        print("Epoch: ", i)
+        cnt = 0
+        for song in dataset:
+            # x - one song, numpy.array of strings
+            print(cnt)
+            losses = [0, 0]
+            for slc in song:
+                step_bool = random.random() > 0.5
+                step = my_gan(sess=sess, vector_input=slc, if_real_input=step_bool)
+                losses[0] += step[1][0]  # gen loss
+                losses[1] += step[1][1]  # dis loss
+            print(losses[0]/len(song), losses[1] / len(song))
 
-    a = my_gan(sess=sess, if_real_input=False, vector_input=test)
-    print(a[1])
+            # After feeding entire song reset models
+            gen.reset_states()
+            dis.reset_states()
+            cnt += 1
 
     # Close session
     summary_writer.close()
     sess.close()
 
-    # for x in dataset:
-    #     x = np.expand_dims(np.expand_dims(x, 1), 1)
-    #     print(x.shape)
-    #     print(x[20])
-    ##
-
-    # for i in range(epochs):
-    #     np.random.shuffle(dataset)
-    #     for song in dataset:
-
 def GAN(if_real, inp, d_out, dis, gen):
+    # d_out uses tanh activation, so it's in (-1, 1) but we need (0, 1)
+    # Without 0's and 1's 'cause we don't like NaNs in loss function
+    nd_out = tf.div(tf.add(d_out, tf.constant(1.0)), tf.constant(2.0))
+
     # Calculate discriminator loss
-    dloss = - tf.reduce_mean(tf.to_float(if_real) * tf.log(d_out) - (1 - tf.to_float(if_real)) * tf.log(1 - d_out))
+    dloss = - tf.reduce_mean(tf.to_float(if_real) * tf.log(nd_out) + (1 - tf.to_float(if_real)) * tf.log(1 - nd_out))
 
     # Calculate generator's loss
-    gloss = - tf.reduce_mean(tf.log(1 - d_out))
+    gloss = - tf.reduce_mean(tf.log(1 - nd_out))
 
     # Define optimizer (for learning rate and beta1 see advices in Deep Convolutional GAN pre-print on arXiv)
     opt = tf.train.AdamOptimizer(learning_rate=0.0002, beta1=0.5)
@@ -130,7 +155,7 @@ def GAN(if_real, inp, d_out, dis, gen):
 
     update_gen = opt.apply_gradients(new_grad_loss_gen)
 
-    # We have to update all other tensors like batch_normalization etc
+    # We have to update all other tensors like batch_normalization or stateful LSTM nodes transition
     def other_updates(model):
         input_tensors = []
 
