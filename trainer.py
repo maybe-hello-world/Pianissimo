@@ -1,17 +1,18 @@
 # !/usr/bin/python3
 
 import tensorflow as tf
-
 import keras.backend as K
 
 import generator as gn
 import discriminator as ds
 
 import random
-
 import numpy as np
+
 from os import listdir
 from os.path import isfile, join
+
+from keras.utils import plot_model
 
 def train(inputfolder, epochs):
 
@@ -21,7 +22,7 @@ def train(inputfolder, epochs):
 
     files = [join(inputfolder, f) for f in listdir(inputfolder) if isfile(join(inputfolder, f))]
 
-    # Func for turning strings like '0, 3, 11' into [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+    # Func for turning strings like '0, 3, 11' into [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1]
     def to_slice(string):
         ans = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         for j in [int(s) for s in string.split(',')]:
@@ -65,6 +66,9 @@ def train(inputfolder, epochs):
 
     # Create generator model
     gen = gn.create_generator(inp)
+    if isfile("model/gen_weights.h5"):
+        gen.load_weights("model/gen_weights.h5")
+
 
     # Get output tensor and do some reshaping
     g_out = gen.output
@@ -73,7 +77,6 @@ def train(inputfolder, epochs):
     g_out = tf.sign(g_out)
     g_out = tf.add(g_out, tf.constant(1.0))
     g_out = tf.div(g_out, tf.constant(2.0))
-    #g_out = tf.round(g_out)
 
     # Get output tensor and do some reshaping
     g_out = tf.expand_dims(g_out, axis=1)
@@ -84,6 +87,8 @@ def train(inputfolder, epochs):
 
     # Create discriminator model
     dis = ds.create_discriminator(x)
+    if isfile("model/dis_wights.h5"):
+        dis.load_weights("model/dis_weights.h5")
 
     # Again get output tensor
     d_out = dis.output
@@ -93,6 +98,7 @@ def train(inputfolder, epochs):
     # my_gan(if_real=<if_real value>, inp=<12-bit vector value>,
     # d_out=<output of discriminator>, dis=<discriminator model>, gen=<generator model>)
     my_gan = GAN(if_real=if_real, inp=inp, d_out=d_out, dis=dis, gen=gen)
+
     #
     ## -----------------------------------------------------------
 
@@ -122,6 +128,20 @@ def train(inputfolder, epochs):
             gen.reset_states()
             dis.reset_states()
             cnt += 1
+
+    # Save generator description...
+    with open("model/gen.yaml", "w") as file:
+        file.write(gen.to_yaml())
+    # ...PNG visualization...
+    plot_model(gen, to_file="model/gen.png", show_shapes=True)
+    # ...and weights
+    gen.save_weights("model/gen_weights.h5")
+
+    # Similar with discriminator
+    with open("model/dis.yaml", "w") as file:
+        file.write(dis.to_yaml())
+    plot_model(dis, to_file="model/dis.png", show_shapes=True)
+    dis.save_weights("model/dis_weights.h5")
 
     # Close session
     summary_writer.close()
