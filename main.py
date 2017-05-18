@@ -3,6 +3,7 @@
 import sys
 import getopt
 import os
+import datetime
 
 import trainer
 import tester
@@ -36,7 +37,9 @@ if len(inputfolder) == 0 or not os.path.isdir(inputfolder):
     print("Folder is missing")
     sys.exit(1)
 
+print(datetime.datetime.now())
 if train:
-    trainer.train(inputfolder, 1)
+    trainer.train(inputfolder, 4)
 else:
     tester.test()
+print(datetime.datetime.now())
