@@ -165,7 +165,8 @@ def train(inputfolder, epochs):
     summary_writer.close()
     sess.close()
 
-    plt.plot(range(0, epochs), gloss_history, range(0, epochs), dloss_history, colors=['red', 'blue'], linewidth=2.)
+    plt.plot(range(0, epochs), gloss_history, color='red', linewidth=2.)
+    plt.plot(range(0, epochs), dloss_history, color='blue', linewidth=2.)
     plt.show()
 
 #g_out is for debug
