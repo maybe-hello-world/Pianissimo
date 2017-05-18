@@ -26,48 +26,10 @@ config:
       implementation: 0
       kernel_constraint: null
       kernel_initializer:
-        class_name: RandomUniform
-        config: {maxval: 0.05, minval: -0.05, seed: null}
+        class_name: RandomNormal
+        config: {mean: 0, seed: null, stddev: 0.02}
       kernel_regularizer: null
       name: lstm_4
-      recurrent_activation: hard_sigmoid
-      recurrent_constraint: null
-      recurrent_dropout: 0.0
-      recurrent_initializer:
-        class_name: Orthogonal
-        config: {gain: 1.0, seed: null}
-      recurrent_regularizer: null
-      return_sequences: true
-      stateful: true
-      trainable: true
-      unit_forget_bias: true
-      units: 144
-      unroll: false
-      use_bias: true
-    inbound_nodes:
-    - - - input_2
-        - 0
-        - 0
-        - {}
-    name: lstm_4
-  - class_name: LSTM
-    config:
-      activation: tanh
-      activity_regularizer: null
-      bias_constraint: null
-      bias_initializer:
-        class_name: Zeros
-        config: {}
-      bias_regularizer: null
-      dropout: 0.0
-      go_backwards: false
-      implementation: 0
-      kernel_constraint: null
-      kernel_initializer:
-        class_name: RandomUniform
-        config: {maxval: 0.05, minval: -0.05, seed: null}
-      kernel_regularizer: null
-      name: lstm_5
       recurrent_activation: hard_sigmoid
       recurrent_constraint: null
       recurrent_dropout: 0.0
@@ -83,11 +45,36 @@ config:
       unroll: false
       use_bias: true
     inbound_nodes:
+    - - - input_2
+        - 0
+        - 0
+        - {}
+    name: lstm_4
+  - class_name: LeakyReLU
+    config:
+      alpha: !!python/object/apply:numpy.core.multiarray._reconstruct
+        args:
+        - &id001 !!python/name:numpy.ndarray ''
+        - !!python/tuple [0]
+        - !!binary |
+          Yg==
+        state: !!python/tuple
+        - 1
+        - !!python/tuple []
+        - &id002 !!python/object/apply:numpy.dtype
+          args: [f4, 0, 1]
+          state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
+        - false
+        - !!binary |
+          zcxMPg==
+      name: leaky_re_lu_1
+      trainable: true
+    inbound_nodes:
     - - - lstm_4
         - 0
         - 0
         - {}
-    name: lstm_5
+    name: leaky_re_lu_1
   - class_name: LSTM
     config:
       activation: tanh
@@ -102,10 +89,10 @@ config:
       implementation: 0
       kernel_constraint: null
       kernel_initializer:
-        class_name: RandomUniform
-        config: {maxval: 0.05, minval: -0.05, seed: null}
+        class_name: RandomNormal
+        config: {mean: 0, seed: null, stddev: 0.02}
       kernel_regularizer: null
-      name: lstm_6
+      name: lstm_5
       recurrent_activation: hard_sigmoid
       recurrent_constraint: null
       recurrent_dropout: 0.0
@@ -121,14 +108,37 @@ config:
       unroll: false
       use_bias: true
     inbound_nodes:
+    - - - leaky_re_lu_1
+        - 0
+        - 0
+        - {}
+    name: lstm_5
+  - class_name: LeakyReLU
+    config:
+      alpha: !!python/object/apply:numpy.core.multiarray._reconstruct
+        args:
+        - *id001
+        - !!python/tuple [0]
+        - !!binary |
+          Yg==
+        state: !!python/tuple
+        - 1
+        - !!python/tuple []
+        - *id002
+        - false
+        - !!binary |
+          zcxMPg==
+      name: leaky_re_lu_2
+      trainable: true
+    inbound_nodes:
     - - - lstm_5
         - 0
         - 0
         - {}
-    name: lstm_6
+    name: leaky_re_lu_2
   - class_name: Dense
     config:
-      activation: linear
+      activation: tanh
       activity_regularizer: null
       bias_constraint: null
       bias_initializer:
@@ -139,28 +149,20 @@ config:
         class_name: MaxNorm
         config: {axis: 0, max_value: 4}
       kernel_initializer:
-        class_name: RandomUniform
-        config: {maxval: 0.05, minval: -0.05, seed: null}
+        class_name: RandomNormal
+        config: {mean: 0, seed: null, stddev: 0.02}
       kernel_regularizer: null
-      name: dense_2
+      name: dense_3
       trainable: true
       units: 1
       use_bias: true
     inbound_nodes:
-    - - - lstm_6
+    - - - leaky_re_lu_2
         - 0
         - 0
         - {}
-    name: dense_2
-  - class_name: Activation
-    config: {activation: tanh, name: activation_2, trainable: true}
-    inbound_nodes:
-    - - - dense_2
-        - 0
-        - 0
-        - {}
-    name: activation_2
+    name: dense_3
   name: model_2
   output_layers:
-  - [activation_2, 0, 0]
+  - [dense_3, 0, 0]
 keras_version: 2.0.4

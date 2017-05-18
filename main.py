@@ -1,45 +1,37 @@
 # !/usr/bin/python3
 
 import sys
-import getopt
+import argparse
 import os
 import datetime
 
-import trainer
-import tester
+from config import *
 
-## Some constants
-g_weights_name = 'g_weights'
-d_weights_name = 'd_weights'
+from trainer import train
+from tester import test
 
-try:
-    opts, args = getopt.getopt(sys.argv[1:], "ho:i:")
-except getopt.GetoptError:
-    print('main.py -o <train|test> -i <inputfolder>')
-    sys.exit(2)
+parser = argparse.ArgumentParser(description='Pianissimo project')
 
+subparsers = parser.add_subparsers(dest='command', title="Commands")
+train_parser = subparsers.add_parser('train', help='Start training of existing (or new created) model')
+train_parser.add_argument('-i', type=str, required=True, help="Folder with parsed music data", metavar='INPUTFOLDER')
+
+test_parser = subparsers.add_parser('test', help='Start creating sequence from start_sequence from config.py')
+
+args = parser.parse_args(sys.argv[1:])
 inputfolder = ""
-train = True
-for opt, arg in opts:
-    if opt == '-h':
-        print('main.py -i <inputfolder>')
-        sys.exit(0)
-    elif opt == '-o':
-        if arg in ('test', 'train'):
-            train = arg == 'train'
-        else:
-            print("Unknown operation")
-            sys.exit(1)
-    elif opt in ("-i", "--ifolder"):
-        inputfolder = arg
 
-if len(inputfolder) == 0 or not os.path.isdir(inputfolder):
-    print("Folder is missing")
-    sys.exit(1)
+if args.command == "train":
+    inputfolder = args.i
+    if len(inputfolder) == 0 or not os.path.isdir(inputfolder):
+        print("Folder is missing")
+        sys.exit(1)
 
 print(datetime.datetime.now())
-if train:
-    trainer.train(inputfolder, 4)
+if args.command == "train":
+    train(inputfolder, config['epochs'])
+elif args.command == "test":
+    test(config['test_start'], config['test_length'])
 else:
-    tester.test()
+    sys.exit(1)
 print(datetime.datetime.now())

@@ -14,7 +14,7 @@ config:
     name: input_1
   - class_name: LSTM
     config:
-      activation: tanh
+      activation: relu
       activity_regularizer: null
       bias_constraint: null
       bias_initializer:
@@ -26,8 +26,8 @@ config:
       implementation: 0
       kernel_constraint: null
       kernel_initializer:
-        class_name: RandomUniform
-        config: {maxval: 0.05, minval: -0.05, seed: null}
+        class_name: RandomNormal
+        config: {mean: 0, seed: null, stddev: 0.02}
       kernel_regularizer: null
       name: lstm_1
       recurrent_activation: hard_sigmoid
@@ -52,7 +52,7 @@ config:
     name: lstm_1
   - class_name: LSTM
     config:
-      activation: tanh
+      activation: relu
       activity_regularizer: null
       bias_constraint: null
       bias_initializer:
@@ -64,8 +64,8 @@ config:
       implementation: 0
       kernel_constraint: null
       kernel_initializer:
-        class_name: RandomUniform
-        config: {maxval: 0.05, minval: -0.05, seed: null}
+        class_name: RandomNormal
+        config: {mean: 0, seed: null, stddev: 0.02}
       kernel_regularizer: null
       name: lstm_2
       recurrent_activation: hard_sigmoid
@@ -90,7 +90,7 @@ config:
     name: lstm_2
   - class_name: LSTM
     config:
-      activation: tanh
+      activation: relu
       activity_regularizer: null
       bias_constraint: null
       bias_initializer:
@@ -102,8 +102,8 @@ config:
       implementation: 0
       kernel_constraint: null
       kernel_initializer:
-        class_name: RandomUniform
-        config: {maxval: 0.05, minval: -0.05, seed: null}
+        class_name: RandomNormal
+        config: {mean: 0, seed: null, stddev: 0.02}
       kernel_regularizer: null
       name: lstm_3
       recurrent_activation: hard_sigmoid
@@ -117,7 +117,7 @@ config:
       stateful: true
       trainable: true
       unit_forget_bias: true
-      units: 36
+      units: 72
       unroll: false
       use_bias: true
     inbound_nodes:
@@ -128,7 +128,7 @@ config:
     name: lstm_3
   - class_name: Dense
     config:
-      activation: linear
+      activation: relu
       activity_regularizer: null
       bias_constraint: null
       bias_initializer:
@@ -139,12 +139,12 @@ config:
         class_name: MaxNorm
         config: {axis: 0, max_value: 4}
       kernel_initializer:
-        class_name: RandomUniform
-        config: {maxval: 0.05, minval: -0.05, seed: null}
+        class_name: RandomNormal
+        config: {mean: 0, seed: null, stddev: 0.02}
       kernel_regularizer: null
       name: dense_1
       trainable: true
-      units: 12
+      units: 72
       use_bias: true
     inbound_nodes:
     - - - lstm_3
@@ -152,15 +152,33 @@ config:
         - 0
         - {}
     name: dense_1
-  - class_name: Activation
-    config: {activation: tanh, name: activation_1, trainable: true}
+  - class_name: Dense
+    config:
+      activation: tanh
+      activity_regularizer: null
+      bias_constraint: null
+      bias_initializer:
+        class_name: Zeros
+        config: {}
+      bias_regularizer: null
+      kernel_constraint:
+        class_name: MaxNorm
+        config: {axis: 0, max_value: 4}
+      kernel_initializer:
+        class_name: RandomNormal
+        config: {mean: 0, seed: null, stddev: 0.02}
+      kernel_regularizer: null
+      name: dense_2
+      trainable: true
+      units: 12
+      use_bias: true
     inbound_nodes:
     - - - dense_1
         - 0
         - 0
         - {}
-    name: activation_1
+    name: dense_2
   name: model_1
   output_layers:
-  - [activation_1, 0, 0]
+  - [dense_2, 0, 0]
 keras_version: 2.0.4
