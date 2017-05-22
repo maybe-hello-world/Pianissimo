@@ -3,7 +3,6 @@
 import sys
 import argparse
 import os
-import datetime
 
 from config import *
 
@@ -27,11 +26,9 @@ if args.command == "train":
         print("Folder is missing")
         sys.exit(1)
 
-print(datetime.datetime.now())
 if args.command == "train":
     train(inputfolder, config['epochs'])
 elif args.command == "test":
-    test(config['test_start'], config['test_length'])
+    test(config['test_seq'], config['test_length'])
 else:
     sys.exit(1)
-print(datetime.datetime.now())

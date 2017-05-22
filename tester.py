@@ -7,7 +7,7 @@ import numpy as np
 
 from keras.models import model_from_yaml
 
-def test(start_seq, length):
+def test(test_seq, length):
     sess = tf.Session()
 
     # Define session for Keras and set learning flag to true (batch normalization etc)
@@ -29,12 +29,16 @@ def test(start_seq, length):
     g_out = tf.div(g_out, tf.constant(2.0))
 
     #prepare data
-    sequence = [start_seq]
-    start_seq = np.array(start_seq)
+    sequence = [test_seq[0]]
+    start_seq = np.array(test_seq[0])
 
     #feed generator with his own answers
-    for i in range(length):
-        start_seq = sess.run(g_out, feed_dict={inp: np.expand_dims(np.expand_dims(start_seq, axis=0), axis=0)})[0]
+    for i in range(1, length):
+        if i % config['test_freq'] == 0:
+            start_seq = test_seq[int(i / config['test_freq'])]
+            start_seq = np.array(start_seq)
+        else:
+            start_seq = sess.run(g_out, feed_dict={inp: np.expand_dims(np.expand_dims(start_seq, axis=0), axis=0)})[0]
         sequence.append(start_seq.tolist())
 
     sess.close()
@@ -42,6 +46,6 @@ def test(start_seq, length):
     #save data
     with open(config['base_folder'] + "/" + config['result_file'], "w") as file:
         for chord in sequence:
-            x = [int(i) for i in chord]
+            x = [i for i, x in enumerate(chord) if x == 1.]
             file.write(", ".join(map(str,x)))
             file.write('\n')

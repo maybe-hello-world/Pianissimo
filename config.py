@@ -14,11 +14,16 @@ config = {
         '/home/kell/tensorflow_logs',   #Place where logs are stored (for tensorboard)
 
     #train
-    'epochs': 2,                        #Number of epochs to train
+    'epochs': 12,                        #Number of epochs to train
 
     #test
-    'test_start':
-        [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],    #Start sequence for testing
-    'test_length': 30,                  #Length of resulting sequence
+    'test_seq': [   #Sequence for testing
+        [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],   #C
+        [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],   #Am
+        [1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0],   #F
+        [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1],   #G
+    ],
+    'test_freq': 8,                     #How often to insert data from test_seq
+    'test_length': 32,                  #Length of resulting sequence
     'result_file': 'result.txt',        #Location of resulting file
 }

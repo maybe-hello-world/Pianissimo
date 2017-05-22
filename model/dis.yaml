@@ -12,7 +12,7 @@ config:
       sparse: false
     inbound_nodes: []
     name: input_2
-  - class_name: LSTM
+  - class_name: GRU
     config:
       activation: tanh
       activity_regularizer: null
@@ -29,7 +29,7 @@ config:
         class_name: RandomNormal
         config: {mean: 0, seed: null, stddev: 0.02}
       kernel_regularizer: null
-      name: lstm_4
+      name: gru_4
       recurrent_activation: hard_sigmoid
       recurrent_constraint: null
       recurrent_dropout: 0.0
@@ -40,8 +40,7 @@ config:
       return_sequences: true
       stateful: true
       trainable: true
-      unit_forget_bias: true
-      units: 72
+      units: 12
       unroll: false
       use_bias: true
     inbound_nodes:
@@ -49,7 +48,7 @@ config:
         - 0
         - 0
         - {}
-    name: lstm_4
+    name: gru_4
   - class_name: LeakyReLU
     config:
       alpha: !!python/object/apply:numpy.core.multiarray._reconstruct
@@ -70,12 +69,12 @@ config:
       name: leaky_re_lu_1
       trainable: true
     inbound_nodes:
-    - - - lstm_4
+    - - - gru_4
         - 0
         - 0
         - {}
     name: leaky_re_lu_1
-  - class_name: LSTM
+  - class_name: GRU
     config:
       activation: tanh
       activity_regularizer: null
@@ -92,7 +91,7 @@ config:
         class_name: RandomNormal
         config: {mean: 0, seed: null, stddev: 0.02}
       kernel_regularizer: null
-      name: lstm_5
+      name: gru_5
       recurrent_activation: hard_sigmoid
       recurrent_constraint: null
       recurrent_dropout: 0.0
@@ -103,8 +102,7 @@ config:
       return_sequences: false
       stateful: true
       trainable: true
-      unit_forget_bias: true
-      units: 36
+      units: 12
       unroll: false
       use_bias: true
     inbound_nodes:
@@ -112,7 +110,7 @@ config:
         - 0
         - 0
         - {}
-    name: lstm_5
+    name: gru_5
   - class_name: LeakyReLU
     config:
       alpha: !!python/object/apply:numpy.core.multiarray._reconstruct
@@ -131,14 +129,14 @@ config:
       name: leaky_re_lu_2
       trainable: true
     inbound_nodes:
-    - - - lstm_5
+    - - - gru_5
         - 0
         - 0
         - {}
     name: leaky_re_lu_2
   - class_name: Dense
     config:
-      activation: tanh
+      activation: linear
       activity_regularizer: null
       bias_constraint: null
       bias_initializer:
@@ -152,7 +150,7 @@ config:
         class_name: RandomNormal
         config: {mean: 0, seed: null, stddev: 0.02}
       kernel_regularizer: null
-      name: dense_3
+      name: dense_2
       trainable: true
       units: 1
       use_bias: true
@@ -161,8 +159,16 @@ config:
         - 0
         - 0
         - {}
-    name: dense_3
+    name: dense_2
+  - class_name: Activation
+    config: {activation: tanh, name: activation_5, trainable: true}
+    inbound_nodes:
+    - - - dense_2
+        - 0
+        - 0
+        - {}
+    name: activation_5
   name: model_2
   output_layers:
-  - [dense_3, 0, 0]
+  - [activation_5, 0, 0]
 keras_version: 2.0.4

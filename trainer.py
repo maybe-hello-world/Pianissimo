@@ -7,6 +7,8 @@ import keras.backend as K
 import generator as gn
 import discriminator as ds
 
+import datetime
+
 import random
 import numpy as np
 import matplotlib.pyplot as plt
@@ -92,14 +94,11 @@ def train(inputfolder, epochs):
     if isfile(config['base_folder'] + "/" + config['dis_weights']):
         dis.load_weights(config['base_folder'] + "/" + config['dis_weights'])
 
-    # Again get output tensor
-    d_out = dis.output
-
     # Finish stacking GAN: add loss functions and different updates
     # So my_gan is a function with such signature:
     # my_gan(if_real=<if_real value>, inp=<12-bit vector value>,
     # d_out=<output of discriminator>, dis=<discriminator model>, gen=<generator model>)
-    my_gan = GAN(if_real=if_real, inp=inp, d_out=d_out, dis=dis, gen=gen)
+    my_gan = GAN(if_real=if_real, inp=inp, g_out=g_out, dis=dis, gen=gen)
 
     #
     ## -----------------------------------------------------------
@@ -117,6 +116,7 @@ def train(inputfolder, epochs):
     for i in range(epochs):
         accum_g = 0
         accum_d = 0
+        print(datetime.datetime.now())
         print("Epoch: ", i)
         print("Gen loss, Dis loss")
         cnt = 0
@@ -130,8 +130,8 @@ def train(inputfolder, epochs):
                 losses[0] += step[1][0]  # gen loss
                 losses[1] += step[1][1]  # dis loss
                 #debug
-                if np.isnan(losses[0]) or np.isnan(losses[1]):
-                    print(step[2])  #output of discriminator
+                if not(step[2]) and step[3] > 0.1:
+                    print(step[1][0], step[1][1], step[2], step[3])
 
             accum_g += losses[0]/len(song)
             accum_d += losses[1]/len(song)
@@ -165,27 +165,34 @@ def train(inputfolder, epochs):
     summary_writer.close()
     sess.close()
 
+    print(gloss_history)
+    print(dloss_history)
+
     plt.plot(range(0, epochs), gloss_history, color='red', linewidth=2.)
     plt.plot(range(0, epochs), dloss_history, color='blue', linewidth=2.)
     plt.show()
 
 #g_out is for debug
-def GAN(if_real, inp, d_out, dis, gen):
+def GAN(if_real, inp, g_out, dis, gen):
     with tf.name_scope("output"):
         # d_out uses tanh activation, so it's in (-1, 1) but we need (0, 1)
-        nd_out = tf.div(tf.add(d_out, tf.constant(1.0)), tf.constant(2.0))
+        nd_out = tf.div(tf.add(dis.output, tf.constant(1.0)), tf.constant(2.0))
 
         # Without 0's and 1's 'cause we don't like NaNs in loss function
-        nd_out = tf.multiply(nd_out, tf.constant(0.99)) + tf.constant(0.005)
+        nd_out = tf.multiply(nd_out, tf.constant(0.99999)) + tf.constant(0.000005)
 
         # Calculate discriminator loss
         dloss = tf.reduce_mean(tf.to_float(if_real) * tf.log(nd_out) + (1 - tf.to_float(if_real)) * tf.log(1 - nd_out))
 
         # Calculate generator's loss
-        gloss = tf.reduce_mean(tf.log(1 - nd_out))
+        gloss = - tf.reduce_mean(tf.log(nd_out) * (1 - tf.to_float(if_real)))
+
+    # To make generator produce less notes at once
+    with tf.name_scope("gen_bias"):
+        g_bias = (tf.reduce_sum(g_out) / 3) ** 3
 
     dloss = tf.negative(dloss, name="DLOSS")
-    gloss = tf.negative(gloss, name="GLOSS")
+    gloss = tf.add(gloss, g_bias, name="GLOSS")
 
     # Define optimizer (for learning rate and beta1 see advices in Deep Convolutional GAN pre-print on arXiv)
     opt = tf.train.AdamOptimizer(learning_rate=0.0002, beta1=0.5)
@@ -200,9 +207,10 @@ def GAN(if_real, inp, d_out, dis, gen):
     grad_loss_gen = opt.compute_gradients(gloss, gen.trainable_weights)
 
     # list: [(gradient, variable),(gradient, variable)...]
-    new_grad_loss_gen = [(tf.cond(if_real, lambda: tf.multiply(grad, 0), lambda: grad), var) for grad, var in grad_loss_gen]
+    #new_grad_loss_gen = [(tf.cond(if_real, lambda: tf.multiply(grad, 0), lambda: grad), var) for grad, var in grad_loss_gen]
 
-    update_gen = opt.apply_gradients(new_grad_loss_gen)
+    #update_gen = opt.apply_gradients(new_grad_loss_gen)
+    update_gen = opt.apply_gradients(grad_loss_gen)
 
     # We have to update all other tensors like batch_normalization or stateful LSTM nodes transition
     def other_updates(model):
@@ -228,9 +236,9 @@ def GAN(if_real, inp, d_out, dis, gen):
 
     # Create func pointer to feeding step
     def gan_feed(sess, if_real_input, vector_input):
-        nonlocal train_step, losses, if_real, inp, dis, d_out
+        nonlocal train_step, losses, if_real, inp, dis, nd_out
 
-        res = sess.run([train_step, losses, d_out], feed_dict={
+        res = sess.run([train_step, losses, if_real, nd_out], feed_dict={
             if_real: if_real_input,
             inp: vector_input,
         })
