@@ -7,12 +7,14 @@ import numpy as np
 
 from keras.models import model_from_yaml
 
-def test(test_seq, length):
+def test():
+    test_seq = config['test_seq']
+
     sess = tf.Session()
 
     # Define session for Keras and set learning flag to true (batch normalization etc)
     K.set_session(sess)
-    K.set_learning_phase(True)
+    K.set_learning_phase(False)
 
     #load generator model and weights
     with open(config['base_folder'] + "/" + config['gen_model'], "r") as file:
@@ -33,7 +35,7 @@ def test(test_seq, length):
     start_seq = np.array(test_seq[0])
 
     #feed generator with his own answers
-    for i in range(1, length):
+    for i in range(1, config['test_length']):
         if i % config['test_freq'] == 0:
             start_seq = test_seq[int(i / config['test_freq'])]
             start_seq = np.array(start_seq)

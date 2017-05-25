@@ -14,7 +14,8 @@ config = {
         '/home/kell/tensorflow_logs',   #Place where logs are stored (for tensorboard)
 
     #train
-    'epochs': 12,                        #Number of epochs to train
+    'epochs': 2,                        #Number of epochs to train
+    'opt_lr': 0.1,
 
     #test
     'test_seq': [   #Sequence for testing

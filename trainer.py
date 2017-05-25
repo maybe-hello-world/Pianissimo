@@ -18,7 +18,9 @@ from os.path import isfile, join
 
 from keras.utils import plot_model
 
-def train(inputfolder, epochs):
+def train(inputfolder):
+    epochs = config['epochs']
+
     ## -----------------------------------------------------------
     ## Dataset preparation
     #
@@ -95,10 +97,10 @@ def train(inputfolder, epochs):
         dis.load_weights(config['base_folder'] + "/" + config['dis_weights'])
 
     # Finish stacking GAN: add loss functions and different updates
-    # So my_gan is a function with such signature:
-    # my_gan(if_real=<if_real value>, inp=<12-bit vector value>,
+    # So note_gan is a function with such signature:
+    # note_gan(if_real=<if_real value>, inp=<12-bit vector value>,
     # d_out=<output of discriminator>, dis=<discriminator model>, gen=<generator model>)
-    my_gan = GAN(if_real=if_real, inp=inp, g_out=g_out, dis=dis, gen=gen)
+    note_gan = GAN(if_real=if_real, inp=inp, g_out=g_out, dis=dis, gen=gen)
 
     #
     ## -----------------------------------------------------------
@@ -126,12 +128,12 @@ def train(inputfolder, epochs):
             losses = [0, 0]
             for slc in song:
                 step_bool = random.random() > 0.5
-                step = my_gan(sess=sess, vector_input=slc, if_real_input=step_bool)
+                step = note_gan(sess=sess, vector_input=slc, if_real_input=step_bool)
                 losses[0] += step[1][0]  # gen loss
                 losses[1] += step[1][1]  # dis loss
                 #debug
-                if not(step[2]) and step[3] > 0.1:
-                    print(step[1][0], step[1][1], step[2], step[3])
+                #if not(step[2]) and step[3] > 0.1:
+                    #print(step[1][0], step[1][1], step[2], step[3])
 
             accum_g += losses[0]/len(song)
             accum_d += losses[1]/len(song)
@@ -189,13 +191,13 @@ def GAN(if_real, inp, g_out, dis, gen):
 
     # To make generator produce less notes at once
     with tf.name_scope("gen_bias"):
-        g_bias = (tf.reduce_sum(g_out) / 3) ** 3
+        g_bias = tf.constant(25, dtype=tf.float32) / ((tf.constant(1, tf.float32)) + tf.exp( - tf.reduce_sum(g_out) + 6))
 
     dloss = tf.negative(dloss, name="DLOSS")
     gloss = tf.add(gloss, g_bias, name="GLOSS")
 
     # Define optimizer (for learning rate and beta1 see advices in Deep Convolutional GAN pre-print on arXiv)
-    opt = tf.train.AdamOptimizer(learning_rate=0.0002, beta1=0.5)
+    opt = tf.train.AdamOptimizer(learning_rate=config['opt_lr'], beta1=0.9)
 
     # Compute and apply gradients for discriminator
     grad_loss_dis = opt.compute_gradients(dloss, dis.trainable_weights)
@@ -207,10 +209,10 @@ def GAN(if_real, inp, g_out, dis, gen):
     grad_loss_gen = opt.compute_gradients(gloss, gen.trainable_weights)
 
     # list: [(gradient, variable),(gradient, variable)...]
-    #new_grad_loss_gen = [(tf.cond(if_real, lambda: tf.multiply(grad, 0), lambda: grad), var) for grad, var in grad_loss_gen]
+    new_grad_loss_gen = [(tf.cond(if_real, lambda: tf.multiply(grad, 0), lambda: grad), var) for grad, var in grad_loss_gen]
 
-    #update_gen = opt.apply_gradients(new_grad_loss_gen)
-    update_gen = opt.apply_gradients(grad_loss_gen)
+    update_gen = opt.apply_gradients(new_grad_loss_gen)
+    #update_gen = opt.apply_gradients(grad_loss_gen)
 
     # We have to update all other tensors like batch_normalization or stateful LSTM nodes transition
     def other_updates(model):

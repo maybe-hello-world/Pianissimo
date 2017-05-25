@@ -27,8 +27,8 @@ if args.command == "train":
         sys.exit(1)
 
 if args.command == "train":
-    train(inputfolder, config['epochs'])
+    train(inputfolder)
 elif args.command == "test":
-    test(config['test_seq'], config['test_length'])
+    test()
 else:
     sys.exit(1)
