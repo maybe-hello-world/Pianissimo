@@ -191,27 +191,31 @@ def GAN(if_real, inp, g_out, dis, gen):
 
     # To make generator produce less notes at once
     with tf.name_scope("gen_bias"):
-        g_bias = tf.constant(25, dtype=tf.float32) / ((tf.constant(1, tf.float32)) + tf.exp( - tf.reduce_sum(g_out) + 6))
+        g_bias = tf.constant(10, dtype=tf.float32) / ((tf.constant(1, tf.float32)) + tf.exp( - tf.reduce_sum(g_out) + 4))
 
     dloss = tf.negative(dloss, name="DLOSS")
-    gloss = tf.add(gloss, g_bias, name="GLOSS")
+
+    #pre-train
+    #gloss = g_bias
+    #gloss = tf.add(gloss, g_bias, name="GLOSS")
 
     # Define optimizer (for learning rate and beta1 see advices in Deep Convolutional GAN pre-print on arXiv)
-    opt = tf.train.AdamOptimizer(learning_rate=config['opt_lr'], beta1=0.9)
+    d_opt = tf.train.GradientDescentOptimizer(learning_rate=config['d_opt_lr'])
+    g_opt = tf.train.AdamOptimizer(learning_rate=config['g_opt_lr'])
 
     # Compute and apply gradients for discriminator
-    grad_loss_dis = opt.compute_gradients(dloss, dis.trainable_weights)
-    update_dis = opt.apply_gradients(grad_loss_dis)
+    grad_loss_dis = d_opt.compute_gradients(dloss, dis.trainable_weights)
+    update_dis = d_opt.apply_gradients(grad_loss_dis)
 
     # Compute gradients for generator
     # It will be applied only if gen took part in the party
     # (only if we used it's output so if_real == False)
-    grad_loss_gen = opt.compute_gradients(gloss, gen.trainable_weights)
+    grad_loss_gen = g_opt.compute_gradients(gloss, gen.trainable_weights)
 
     # list: [(gradient, variable),(gradient, variable)...]
     new_grad_loss_gen = [(tf.cond(if_real, lambda: tf.multiply(grad, 0), lambda: grad), var) for grad, var in grad_loss_gen]
 
-    update_gen = opt.apply_gradients(new_grad_loss_gen)
+    update_gen = g_opt.apply_gradients(new_grad_loss_gen)
     #update_gen = opt.apply_gradients(grad_loss_gen)
 
     # We have to update all other tensors like batch_normalization or stateful LSTM nodes transition
