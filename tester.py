@@ -26,7 +26,7 @@ def test():
 
     # from tanh (-1, 1) to {0, 1}
     g_out = gen.output
-    g_out = tf.sign(g_out)
+    #g_out = tf.sign(g_out)
     g_out = tf.add(g_out, tf.constant(1.0))
     g_out = tf.div(g_out, tf.constant(2.0))
 
@@ -48,6 +48,6 @@ def test():
     #save data
     with open(config['base_folder'] + "/" + config['result_file'], "w") as file:
         for chord in sequence:
-            x = [i for i, x in enumerate(chord) if x == 1.]
+            x = [i for i, x in enumerate(chord) if x > 0.7]
             file.write(", ".join(map(str,x)))
             file.write('\n')

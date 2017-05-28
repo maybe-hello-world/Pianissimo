@@ -15,7 +15,7 @@ config = {
 
     #train
     'epochs': 6,                        #Number of epochs to train
-    'd_opt_lr': 0.05,                   #discriminator's optimizator learning rate
+    'd_opt_lr': 0.1,                   #discriminator's optimizator learning rate
     'g_opt_lr': 0.1,                    #generator's
 
     #test
