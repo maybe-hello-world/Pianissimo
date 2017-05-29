@@ -29,9 +29,9 @@ def train(inputfolder):
 
     # Func for turning strings like '0, 3, 11' into [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1]
     def to_slice(string):
-        ans = [random.uniform(0, 0.3) for x in range(12)]
+        ans = [random.uniform(-1, -0.3) for x in range(12)]
         for j in [int(s) for s in string.split(',')]:
-            ans[j] = random.uniform(0.7, 1)
+            ans[j] = random.uniform(0.3, 1)
         return np.array(ans)
 
     dataset = []
@@ -81,8 +81,8 @@ def train(inputfolder):
 
         # from tanh (-1, 1) to (0, 1)
         #g_out = tf.sign(g_out)
-        g_out = tf.add(g_out, tf.constant(1.0))
-        g_out = tf.div(g_out, tf.constant(2.0))
+        #g_out = tf.add(g_out, tf.constant(1.0))
+        #g_out = tf.div(g_out, tf.constant(2.0))
 
         # Get output tensor and do some reshaping
         g_out = tf.expand_dims(g_out, axis=1)
@@ -190,12 +190,12 @@ def GAN(if_real, inp, g_out, dis, gen):
         gloss = - tf.reduce_mean(tf.log(nd_out) * (1 - tf.to_float(if_real)))
 
     # To make generator produce less notes at once
-    with tf.name_scope("gen_bias"):
-        g_bias = tf.constant(10, dtype=tf.float32) / ((tf.constant(1, tf.float32)) + tf.exp( - tf.reduce_sum(g_out) + 4))
+    #with tf.name_scope("gen_bias"):
+        #g_bias = tf.constant(10, dtype=tf.float32) / ((tf.constant(1, tf.float32)) + tf.exp( - tf.reduce_sum(g_out) + 4))
 
     dloss = tf.negative(dloss, name="DLOSS")
 
-    gloss = tf.add(gloss, g_bias, name="GLOSS")
+    #gloss = tf.add(gloss, g_bias, name="GLOSS")
 
     # Define optimizer (for learning rate and beta1 see advices in Deep Convolutional GAN pre-print on arXiv)
     d_opt = tf.train.GradientDescentOptimizer(learning_rate=config['d_opt_lr'])
