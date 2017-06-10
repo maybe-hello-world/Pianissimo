@@ -132,8 +132,8 @@ def train(inputfolder):
                 losses[0] += step[1][0]  # gen loss
                 losses[1] += step[1][1]  # dis loss
                 #debug
-                #if not(step[2]) and step[3] > 0.1:
-                    #print(step[1][0], step[1][1], step[2], step[3])
+                # if not(step[2]) and step[3] > 0.1:
+                #     print(step[1][0], step[1][1], step[2], step[3])
 
             accum_g += losses[0]/len(song)
             accum_d += losses[1]/len(song)
@@ -198,7 +198,7 @@ def GAN(if_real, inp, g_out, dis, gen):
     #gloss = tf.add(gloss, g_bias, name="GLOSS")
 
     # Define optimizer (for learning rate and beta1 see advices in Deep Convolutional GAN pre-print on arXiv)
-    d_opt = tf.train.GradientDescentOptimizer(learning_rate=config['d_opt_lr'])
+    d_opt = tf.train.AdamOptimizer(learning_rate=config['d_opt_lr'])
     g_opt = tf.train.AdamOptimizer(learning_rate=config['g_opt_lr'])
 
     # Compute and apply gradients for discriminator

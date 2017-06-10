@@ -14,18 +14,49 @@ config = {
         '/home/kell/tensorflow_logs',   #Place where logs are stored (for tensorboard)
 
     #train
-    'epochs': 30,                        #Number of epochs to train
-    'd_opt_lr': 0.1,                   #discriminator's optimizator learning rate
+    'epochs': 3,                        #Number of epochs to train
+    'd_opt_lr': 0.1,                    #discriminator's optimizator learning rate
     'g_opt_lr': 0.1,                    #generator's
 
     #test
-    'test_seq': [   #Sequence for testing
-        [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],   #C
-        [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],   #Am
-        [1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0],   #F
-        [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1],   #G
+    # 'test_seq': [   #Sequence for testing
+    #     [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],   #C
+    #     [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],   #Am
+    #     [1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0],   #F
+    #     [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1],   #G
+    # ],
+
+    # C C# D D# E F F# G G# A A# H
+    'test_seq': [
+        # first few notes feeded from this pattern, then output -> input except for 'marker' chords
+        # Key: Dmaj
+        [
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+        ],
+        [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],   #C5
+        [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],   #E5
+        [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0],   #G5
+        [0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],   #A5
+
     ],
-    'test_freq': 8,                     #How often to insert data from test_seq
+
+    'test_freq': 4,                     #How often to insert data from test_seq
     'test_length': 32,                  #Length of resulting sequence
     'result_file': 'result.txt',        #Location of resulting file
 }
