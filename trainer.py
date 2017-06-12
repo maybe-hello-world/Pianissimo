@@ -99,8 +99,8 @@ def train(inputfolder):
     # Finish stacking GAN: add loss functions and different updates
     # So note_gan is a function with such signature:
     # note_gan(if_real=<if_real value>, inp=<12-bit vector value>,
-    # d_out=<output of discriminator>, dis=<discriminator model>, gen=<generator model>)
-    note_gan = GAN(if_real=if_real, inp=inp, g_out=g_out, dis=dis, gen=gen)
+    # dis=<discriminator model>, gen=<generator model>)
+    note_gan = GAN(if_real=if_real, inp=inp, dis=dis, gen=gen)
 
     #
     ## -----------------------------------------------------------
@@ -175,7 +175,7 @@ def train(inputfolder):
     plt.show()
 
 #g_out is for debug
-def GAN(if_real, inp, g_out, dis, gen):
+def GAN(if_real, inp, dis, gen):
     with tf.name_scope("output"):
         # d_out uses tanh activation, so it's in (-1, 1) but we need (0, 1)
         nd_out = tf.div(tf.add(dis.output, tf.constant(1.0)), tf.constant(2.0))
@@ -187,15 +187,10 @@ def GAN(if_real, inp, g_out, dis, gen):
         dloss = tf.reduce_mean(tf.to_float(if_real) * tf.log(nd_out) + (1 - tf.to_float(if_real)) * tf.log(1 - nd_out))
 
         # Calculate generator's loss
-        gloss = - tf.reduce_mean(tf.log(nd_out) * (1 - tf.to_float(if_real)))
-
-    # To make generator produce less notes at once
-    #with tf.name_scope("gen_bias"):
-        #g_bias = tf.constant(10, dtype=tf.float32) / ((tf.constant(1, tf.float32)) + tf.exp( - tf.reduce_sum(g_out) + 4))
+        gloss = tf.reduce_mean(tf.log(nd_out) * (1 - tf.to_float(if_real)))
 
     dloss = tf.negative(dloss, name="DLOSS")
-
-    #gloss = tf.add(gloss, g_bias, name="GLOSS")
+    gloss = tf.negative(gloss, name="GLOSS")
 
     # Define optimizer (for learning rate and beta1 see advices in Deep Convolutional GAN pre-print on arXiv)
     d_opt = tf.train.AdamOptimizer(learning_rate=config['d_opt_lr'])
