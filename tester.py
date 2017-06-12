@@ -12,9 +12,9 @@ def test():
 
     sess = tf.Session()
 
-    # Define session for Keras and set learning flag to true (batch normalization etc)
+    # Define session for Keras and set learning flag to true (in order to use dropout even in tesing phase)
     K.set_session(sess)
-    K.set_learning_phase(False)
+    K.set_learning_phase(True)
 
     #load generator model and weights
     with open(config['base_folder'] + "/" + config['gen_model'], "r") as file:
