@@ -36,7 +36,7 @@ def test():
 
     # feed generator with start sequence in order to teach her a bit
     for x in start_seq:
-        a = sess.run(g_out, feed_dict={inp: np.expand_dims(np.expand_dims(x, axis=0), axis=0)})[0]
+        sess.run(g_out, feed_dict={inp: np.expand_dims(np.expand_dims(x, axis=0), axis=0)})
         sequence.append(x.tolist())
 
     start_seq = np.array(test_seq[1])
@@ -46,7 +46,7 @@ def test():
         if i % config['test_freq'] == 0:
             start_seq = test_seq[int(i / config['test_freq']) - 3]
             start_seq = np.array(start_seq)
-            a = sess.run(g_out, feed_dict={inp: np.expand_dims(np.expand_dims(start_seq, axis=0), axis=0)})[0]
+            sess.run(g_out, feed_dict={inp: np.expand_dims(np.expand_dims(start_seq, axis=0), axis=0)})
         else:
             start_seq = sess.run(g_out, feed_dict={inp: np.expand_dims(np.expand_dims(start_seq, axis=0), axis=0)})[0]
         sequence.append(start_seq.tolist())
