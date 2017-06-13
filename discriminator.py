@@ -19,10 +19,10 @@ import tensorflow as tf
 def create_discriminator(inp_tensor):
     with tf.name_scope('discriminator'):
         prev_l = Input(tensor=inp_tensor)
-        prev_l = GRU(16, return_sequences=True, stateful=True, kernel_initializer=RandomNormal(mean=0, stddev=0.05))(prev_l)
+        prev_l = GRU(18, return_sequences=True, stateful=True, kernel_initializer=RandomNormal(mean=0, stddev=0.05))(prev_l)
         prev_l = LeakyReLU(alpha=0.2)(prev_l)
         prev_l = Dropout(rate=0.2)(prev_l)
-        prev_l = GRU(12, return_sequences=True, stateful=True, kernel_initializer=RandomNormal(mean=0, stddev=0.1))(prev_l)
+        prev_l = GRU(16, return_sequences=True, stateful=True, kernel_initializer=RandomNormal(mean=0, stddev=0.1))(prev_l)
         prev_l = LeakyReLU(alpha=0.2)(prev_l)
         prev_l = GRU(12, stateful=True, kernel_initializer=RandomNormal(mean=0, stddev=0.2))(prev_l)
         prev_l = Dropout(rate=0.2)(prev_l)

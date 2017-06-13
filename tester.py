@@ -44,7 +44,7 @@ def test():
     # feed generator with his own answers
     for i in range(len(test_seq[0]), config['test_length']):
         if i % config['test_freq'] == 0:
-            start_seq = test_seq[int(i / config['test_freq']) - 3]
+            start_seq = test_seq[int(i / config['test_freq']) - 1]
             start_seq = np.array(start_seq)
             sess.run(g_out, feed_dict={inp: np.expand_dims(np.expand_dims(start_seq, axis=0), axis=0)})
         else:
