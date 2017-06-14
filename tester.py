@@ -24,11 +24,7 @@ def test():
     #set input for session
     inp = gen.input
 
-    # from tanh (-1, 1) to {0, 1}
     g_out = gen.output
-    #g_out = tf.sign(g_out)
-    #g_out = tf.add(g_out, tf.constant(1.0))
-    #g_out = tf.div(g_out, tf.constant(2.0))
 
     #prepare data
     sequence = []

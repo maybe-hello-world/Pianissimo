@@ -79,11 +79,6 @@ def train(inputfolder):
         # Get output tensor and do some reshaping
         g_out = gen.output
 
-        # from tanh (-1, 1) to (0, 1)
-        #g_out = tf.sign(g_out)
-        #g_out = tf.add(g_out, tf.constant(1.0))
-        #g_out = tf.div(g_out, tf.constant(2.0))
-
         # Get output tensor and do some reshaping
         g_out = tf.expand_dims(g_out, axis=1)
 
@@ -124,16 +119,12 @@ def train(inputfolder):
         cnt = 0
         for song in dataset:
             # x - one song, numpy.array of strings
-            #print(cnt)
             losses = [0, 0]
             for slc in song:
                 step_bool = random.random() > 0.5
                 step = note_gan(sess=sess, vector_input=slc, if_real_input=step_bool)
                 losses[0] += step[1][0]  # gen loss
                 losses[1] += step[1][1]  # dis loss
-                #debug
-                # if not(step[2]) and step[3] > 0.1:
-                #     print(step[1][0], step[1][1], step[2], step[3])
 
             accum_g += losses[0]/len(song)
             accum_d += losses[1]/len(song)
@@ -209,7 +200,6 @@ def GAN(if_real, inp, dis, gen):
     new_grad_loss_gen = [(tf.cond(if_real, lambda: tf.multiply(grad, 0), lambda: grad), var) for grad, var in grad_loss_gen]
 
     update_gen = g_opt.apply_gradients(new_grad_loss_gen)
-    #update_gen = opt.apply_gradients(grad_loss_gen)
 
     # We have to update all other tensors like batch_normalization or stateful LSTM nodes transition
     def other_updates(model):

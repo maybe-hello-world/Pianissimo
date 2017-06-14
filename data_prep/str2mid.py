@@ -2,7 +2,6 @@ from mido import Message, MidiFile, MidiTrack
 import sys
 import getopt
 
-
 def main(argv):
     # script -i <inputfile> -o <outputfile>
     inputfile = ''
@@ -47,8 +46,6 @@ def main(argv):
             track.append(Message('note_on', note=x + 60, velocity=0, time=0))
             i += 1
 
-    #for msg in track:
-        #print(msg)
     mid.save(outputfile)
 
 if __name__ == "__main__":

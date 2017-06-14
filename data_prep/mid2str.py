@@ -3,7 +3,6 @@ from mido import MidiFile
 import sys
 import getopt
 
-
 # Class for MIDI notes
 class Note:
     def __init__(self, action, note, time):

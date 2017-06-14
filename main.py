@@ -4,8 +4,6 @@ import sys
 import argparse
 import os
 
-from config import *
-
 from trainer import train
 from tester import test
 
