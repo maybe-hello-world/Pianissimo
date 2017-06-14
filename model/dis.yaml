@@ -12,7 +12,7 @@ config:
       sparse: false
     inbound_nodes: []
     name: input_2
-  - class_name: LSTM
+  - class_name: GRU
     config:
       activation: tanh
       activity_regularizer: null
@@ -27,9 +27,9 @@ config:
       kernel_constraint: null
       kernel_initializer:
         class_name: RandomNormal
-        config: {mean: 0, seed: null, stddev: 0.02}
+        config: {mean: 0, seed: null, stddev: 0.05}
       kernel_regularizer: null
-      name: lstm_4
+      name: gru_3
       recurrent_activation: hard_sigmoid
       recurrent_constraint: null
       recurrent_dropout: 0.0
@@ -40,8 +40,7 @@ config:
       return_sequences: true
       stateful: true
       trainable: true
-      unit_forget_bias: true
-      units: 72
+      units: 18
       unroll: false
       use_bias: true
     inbound_nodes:
@@ -49,7 +48,7 @@ config:
         - 0
         - 0
         - {}
-    name: lstm_4
+    name: gru_3
   - class_name: LeakyReLU
     config:
       alpha: !!python/object/apply:numpy.core.multiarray._reconstruct
@@ -67,15 +66,23 @@ config:
         - false
         - !!binary |
           zcxMPg==
-      name: leaky_re_lu_1
+      name: leaky_re_lu_3
       trainable: true
     inbound_nodes:
-    - - - lstm_4
+    - - - gru_3
         - 0
         - 0
         - {}
-    name: leaky_re_lu_1
-  - class_name: LSTM
+    name: leaky_re_lu_3
+  - class_name: Dropout
+    config: {name: dropout_3, rate: 0.2, trainable: true}
+    inbound_nodes:
+    - - - leaky_re_lu_3
+        - 0
+        - 0
+        - {}
+    name: dropout_3
+  - class_name: GRU
     config:
       activation: tanh
       activity_regularizer: null
@@ -90,9 +97,9 @@ config:
       kernel_constraint: null
       kernel_initializer:
         class_name: RandomNormal
-        config: {mean: 0, seed: null, stddev: 0.02}
+        config: {mean: 0, seed: null, stddev: 0.1}
       kernel_regularizer: null
-      name: lstm_5
+      name: gru_4
       recurrent_activation: hard_sigmoid
       recurrent_constraint: null
       recurrent_dropout: 0.0
@@ -100,19 +107,18 @@ config:
         class_name: Orthogonal
         config: {gain: 1.0, seed: null}
       recurrent_regularizer: null
-      return_sequences: false
+      return_sequences: true
       stateful: true
       trainable: true
-      unit_forget_bias: true
-      units: 36
+      units: 16
       unroll: false
       use_bias: true
     inbound_nodes:
-    - - - leaky_re_lu_1
+    - - - dropout_3
         - 0
         - 0
         - {}
-    name: lstm_5
+    name: gru_4
   - class_name: LeakyReLU
     config:
       alpha: !!python/object/apply:numpy.core.multiarray._reconstruct
@@ -128,15 +134,15 @@ config:
         - false
         - !!binary |
           zcxMPg==
-      name: leaky_re_lu_2
+      name: leaky_re_lu_4
       trainable: true
     inbound_nodes:
-    - - - lstm_5
+    - - - gru_4
         - 0
         - 0
         - {}
-    name: leaky_re_lu_2
-  - class_name: Dense
+    name: leaky_re_lu_4
+  - class_name: GRU
     config:
       activation: tanh
       activity_regularizer: null
@@ -145,24 +151,98 @@ config:
         class_name: Zeros
         config: {}
       bias_regularizer: null
-      kernel_constraint:
-        class_name: MaxNorm
-        config: {axis: 0, max_value: 4}
+      dropout: 0.0
+      go_backwards: false
+      implementation: 0
+      kernel_constraint: null
       kernel_initializer:
         class_name: RandomNormal
-        config: {mean: 0, seed: null, stddev: 0.02}
+        config: {mean: 0, seed: null, stddev: 0.2}
       kernel_regularizer: null
-      name: dense_3
+      name: gru_5
+      recurrent_activation: hard_sigmoid
+      recurrent_constraint: null
+      recurrent_dropout: 0.0
+      recurrent_initializer:
+        class_name: Orthogonal
+        config: {gain: 1.0, seed: null}
+      recurrent_regularizer: null
+      return_sequences: false
+      stateful: true
+      trainable: true
+      units: 12
+      unroll: false
+      use_bias: true
+    inbound_nodes:
+    - - - leaky_re_lu_4
+        - 0
+        - 0
+        - {}
+    name: gru_5
+  - class_name: Dropout
+    config: {name: dropout_4, rate: 0.2, trainable: true}
+    inbound_nodes:
+    - - - gru_5
+        - 0
+        - 0
+        - {}
+    name: dropout_4
+  - class_name: LeakyReLU
+    config:
+      alpha: !!python/object/apply:numpy.core.multiarray._reconstruct
+        args:
+        - *id001
+        - !!python/tuple [0]
+        - !!binary |
+          Yg==
+        state: !!python/tuple
+        - 1
+        - !!python/tuple []
+        - *id002
+        - false
+        - !!binary |
+          zcxMPg==
+      name: leaky_re_lu_5
+      trainable: true
+    inbound_nodes:
+    - - - dropout_4
+        - 0
+        - 0
+        - {}
+    name: leaky_re_lu_5
+  - class_name: Dense
+    config:
+      activation: linear
+      activity_regularizer: null
+      bias_constraint: null
+      bias_initializer:
+        class_name: Zeros
+        config: {}
+      bias_regularizer: null
+      kernel_constraint: null
+      kernel_initializer:
+        class_name: RandomNormal
+        config: {mean: 0, seed: null, stddev: 0.3}
+      kernel_regularizer: null
+      name: dense_2
       trainable: true
       units: 1
       use_bias: true
     inbound_nodes:
-    - - - leaky_re_lu_2
+    - - - leaky_re_lu_5
         - 0
         - 0
         - {}
-    name: dense_3
+    name: dense_2
+  - class_name: Activation
+    config: {activation: tanh, name: activation_2, trainable: true}
+    inbound_nodes:
+    - - - dense_2
+        - 0
+        - 0
+        - {}
+    name: activation_2
   name: model_2
   output_layers:
-  - [dense_3, 0, 0]
+  - [activation_2, 0, 0]
 keras_version: 2.0.4
